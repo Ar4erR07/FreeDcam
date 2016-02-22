@@ -445,7 +445,7 @@ public class CamParametersHandler extends AbstractParameterHandler
             ex.printStackTrace();
         }
         try {
-            NightMode = new NightModeParameter(uiHandler,cameraParameters, baseCameraHolder,"","", cameraUiWrapper);
+            NightMode = new NightModeParameter(uiHandler,cameraParameters, baseCameraHolder,"","");
         }
         catch (Exception ex)
         {
