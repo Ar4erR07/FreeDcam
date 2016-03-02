@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by GeorgeKiarie on 2/11/2016.
@@ -16,6 +18,7 @@ public class MetaDataExtractor {
     int isoActual;
     boolean isRoot = false;
     String Description;
+    float[] asShotMatrix;
 
     public MetaDataExtractor()
     {
@@ -181,5 +184,122 @@ public class MetaDataExtractor {
         return Description;
     }
 
+    public float[] getAsShotMatrix()
+    {
+        return asShotMatrix;
+    }
+
+    public void extractgain()
+
+    {
+        if(DeviceUtils.IS_DEVICE_ONEOF(DeviceUtils.MI3_4)) {
+            Thread t = new Thread(new Runnable() {
+                public void run() {
+                    List<String> metadata = new ArrayList<>();
+                    Process process;
+
+                    try {
+
+                        process = new ProcessBuilder()
+                                .command("su", "-c", "logcat -d -s mm-camera | grep -E r_gain")
+                                .redirectErrorStream(true)
+                                .start();
+
+
+                        BufferedReader bufferedReader = new BufferedReader(
+                                new InputStreamReader(process.getInputStream()));
+
+                        String line = "";
+
+                        while ((line = bufferedReader.readLine()) != null) {
+                            metadata.add(line);
+                        }
+
+
+                        final String gainpattern = "\\d\\.\\d+";
+
+
+                        String lastline = metadata.get(metadata.size() - 1);
+
+                        Matcher m = Pattern.compile(gainpattern).matcher(lastline);
+
+                        if (m.find()) {
+                            List<Float> floats = new ArrayList<>();
+                            while (m.find()) {
+
+
+                                floats.add(1.0f / Float.parseFloat(m.group()));
+
+                            }
+                            asShotMatrix = new float[floats.size()];
+                            for (int i = 0; i < floats.size(); i++) asShotMatrix[i] = floats.get(i);
+
+
+                        }
+
+
+                        process.destroy();
+
+                    } catch (IOException e) {
+                    }
+                }
+            });
+            t.start();
+        }
+        else {
+            Thread t = new Thread(new Runnable() {
+                public void run() {
+
+                    List<String> metadata = new ArrayList<>();
+                    Process process;
+
+
+                    try {
+
+                        process = new ProcessBuilder()
+                                .command("su", "-c", "logcat -d -s mm-camera | grep -E color_temp")
+                                .redirectErrorStream(true)
+                                .start();
+
+
+                        BufferedReader bufferedReader = new BufferedReader(
+                                new InputStreamReader(process.getInputStream()));
+
+                        String line = "";
+
+                        while ((line = bufferedReader.readLine()) != null) {
+                            metadata.add(line);
+                        }
+
+
+                        final String gainpattern = "\\d\\.\\d+";
+
+
+                        String lastline = metadata.get(metadata.size() - 1);
+
+                        Matcher m = Pattern.compile(gainpattern).matcher(lastline);
+
+                        if (m.find()) {
+                            List<Float> floats = new ArrayList<Float>();
+                            while (m.find()) {
+
+                                floats.add(1.0f / Float.parseFloat(m.group()));
+                            }
+                            asShotMatrix = new float[floats.size()];
+                            for (int i = 0; i < floats.size(); i++) asShotMatrix[i] = floats.get(i);
+
+
+                        }
+
+
+                        process.destroy();
+
+                    } catch (IOException e) {
+                    }
+                }
+            });
+            t.start();
+        }
+    }
 
 }
