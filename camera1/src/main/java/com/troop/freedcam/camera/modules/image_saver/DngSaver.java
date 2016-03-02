@@ -76,12 +76,13 @@ public class DngSaver extends JpegSaver
             return;
         awaitpicture =false;
         Log.d(TAG, "Take Picture Callback");
-        handler.post(new Runnable() {
+        new Thread (new Runnable() {
             @Override
             public void run() {
                 processData(data, new File(StringUtils.getFilePath(externalSd, fileEnding)));
             }
-        });
+        }).start();
+        iWorkeDone.OnWorkDone();
 
     }
 
@@ -144,9 +145,14 @@ public class DngSaver extends JpegSaver
             fnum = 2.0f;
             focal = 28.342f;
         }
+        else if (DeviceUtils.IS_DEVICE_ONEOF(DeviceUtils.LG_G2_3)){
+            fnum = 2.2f;
+            focal = ((CamParametersHandler)cameraHolder.ParameterHandler).GetFocal();
+        }
         else {
-        fnum = ((CamParametersHandler)cameraHolder.ParameterHandler).GetFnumber();
-        focal = ((CamParametersHandler)cameraHolder.ParameterHandler).GetFocal();}
+            fnum = ((CamParametersHandler)cameraHolder.ParameterHandler).GetFnumber();
+            focal = ((CamParametersHandler)cameraHolder.ParameterHandler).GetFocal();
+        }
         if(meta != null){
             dngConverter.setExifData(meta.getIso(), meta.getExp(), meta.getFlash(), fnum, focal, meta.getDescription(), cameraHolder.Orientation + "", 0);}
         else
@@ -154,7 +160,6 @@ public class DngSaver extends JpegSaver
 
         dngConverter.WriteDNG(DeviceUtils.DEVICE());
         //dngConverter.RELEASE();
-        iWorkeDone.OnWorkDone();
         iWorkeDone.ScanFile(file);
 
     }
