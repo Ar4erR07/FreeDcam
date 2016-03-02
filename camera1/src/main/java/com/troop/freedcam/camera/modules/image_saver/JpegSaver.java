@@ -43,7 +43,6 @@ public class JpegSaver implements I_Callbacks.PictureCallback
             @Override
             public void run() {
                 cameraHolder.TakePicture(null, raw, JpegSaver.this);
-
             }
         });
 

@@ -564,7 +564,7 @@ void process10tight(TIFF *tif,DngWriter *writer)
     }
     TIFFWriteRawStrip(tif, 0, out, writer->rawheight*shouldberowsize);
 
-    TIFFRewriteDirectory (tif);
+    TIFFWriteDirectory (tif);
     LOGD("Finalizng DNG");
     TIFFClose(tif);
 
@@ -626,7 +626,7 @@ void processLoose(TIFF *tif,DngWriter *writer)
 		}
 	}
     //TIFFCheckpointDirectory(tif);
-    TIFFRewriteDirectory (tif);
+    TIFFWriteDirectory (tif);
     LOGD("Finalizng DNG");
     TIFFClose(tif);
     LOGD("Free Memory");
@@ -666,7 +666,7 @@ void processSXXX16(TIFF *tif,DngWriter *writer)
 		LOGD("Error writing TIFF scanline.");
 		}
 	}
-    TIFFRewriteDirectory (tif);
+    TIFFWriteDirectory (tif);
     LOGD("Finalizng DNG");
     TIFFClose(tif);
     LOGD("Free Memory");

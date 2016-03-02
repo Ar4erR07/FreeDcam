@@ -162,8 +162,7 @@ public class StringUtils
 
     public static String GetExternalSDCARD()
     {
-
-            return System.getenv("SECONDARY_STORAGE");
+        return System.getenv("SECONDARY_STORAGE");
     }
 
     public static String GetInternalSDCARD()

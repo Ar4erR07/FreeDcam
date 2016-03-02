@@ -23,7 +23,6 @@ public class BurstManualParam extends BaseManualParameter {
         if (DeviceUtils.IS_DEVICE_ONEOF(DeviceUtils.ZTE_DEVICES) ||
                 DeviceUtils.IS(DeviceUtils.Devices.LG_G3)|| DeviceUtils.IS(DeviceUtils.Devices.LG_G2)|| DeviceUtils.IS_DEVICE_ONEOF(DeviceUtils.MI3_4)
                 || DeviceUtils.IS(DeviceUtils.Devices.LG_G4))
-            isVisible = true;
             isSupported = true;
 
         //TODO add missing logic
@@ -40,9 +39,10 @@ public class BurstManualParam extends BaseManualParameter {
     {
         return isSupported;
     }
+
     @Override
     public boolean IsVisible() {
-        return isVisible;
+        return IsSupported();
     }
 
     @Override
@@ -99,15 +99,13 @@ public class BurstManualParam extends BaseManualParameter {
         @Override
         public String ModuleChanged(String module)
         {
-            if ((module.equals(AbstractModuleHandler.MODULE_VIDEO) || module.equals(AbstractModuleHandler.MODULE_HDR)) && isSupported){
+            if ((module.equals(AbstractModuleHandler.MODULE_VIDEO) || module.equals(AbstractModuleHandler.MODULE_HDR)) && isSupported)
                 BackgroundIsSupportedChanged(false);
-            isVisible = false;}
             else if ((module.equals(AbstractModuleHandler.MODULE_PICTURE)
                     || module.equals(AbstractModuleHandler.MODULE_INTERVAL)
                     )&& isSupported)
             {
                 BackgroundIsSupportedChanged(true);
-                isVisible = true;
             }
             return null;
         }
