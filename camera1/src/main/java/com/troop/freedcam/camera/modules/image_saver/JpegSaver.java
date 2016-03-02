@@ -97,7 +97,8 @@ public class JpegSaver implements I_Callbacks.PictureCallback
             e.printStackTrace();
         }
         Log.d(TAG, "End Saving Bytes");
-        iWorkeDone.OnWorkDone(fileName);
+        iWorkeDone.OnWorkDone();
+        iWorkeDone.ScanFile(fileName);
 
     }
 

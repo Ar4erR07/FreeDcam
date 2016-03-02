@@ -206,7 +206,7 @@ public class PictureModule extends AbstractModule implements I_WorkeDone {
     }
 
     @Override
-    public void OnWorkDone(File file)
+    public void OnWorkDone()
     {
 //        if ((DeviceUtils.isZTEADV() || DeviceUtils.isZTEADVIMX214() ||DeviceUtils.isZTEADV234()) && !baseCameraHolder.ParameterHandler.ManualShutter.GetStringValue().equals("Auto"))
       //  {
@@ -217,8 +217,12 @@ public class PictureModule extends AbstractModule implements I_WorkeDone {
       //  }
        // else
             baseCameraHolder.StartPreview();
-        MediaScannerManager.ScanMedia(Settings.context.getApplicationContext() , file);
         stopworking();
+    }
+
+    @Override
+    public void ScanFile(File file) {
+        MediaScannerManager.ScanMedia(Settings.context.getApplicationContext() , file);
         eventHandler.WorkFinished(file);
     }
 
@@ -261,14 +265,18 @@ public class PictureModule extends AbstractModule implements I_WorkeDone {
 
     I_WorkeDone burstDone = new I_WorkeDone() {
         @Override
-        public void OnWorkDone(File file) {
-            MediaScannerManager.ScanMedia(Settings.context.getApplicationContext(), file);
+        public void OnWorkDone() {
             if (burstcount == ParameterHandler.Burst.GetValue() -1) {
                 stopworking();
                 baseCameraHolder.StartPreview();
             }
             else if (burstcount < ParameterHandler.Burst.GetValue() -1)
                 burstcount++;
+        }
+
+        @Override
+        public void ScanFile(File file) {
+            MediaScannerManager.ScanMedia(Settings.context.getApplicationContext(), file);
         }
 
         @Override

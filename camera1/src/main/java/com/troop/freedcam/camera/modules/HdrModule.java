@@ -127,7 +127,7 @@ public class HdrModule extends PictureModule implements I_WorkeDone
     }
 
     @Override
-    public void OnWorkDone(File file)
+    public void OnWorkDone()
     {
         baseCameraHolder.ParameterHandler.SetParametersToCamera();
         baseCameraHolder.StartPreview();
@@ -141,6 +141,10 @@ public class HdrModule extends PictureModule implements I_WorkeDone
             hdrCount++;
             takePicture();
         }
+    }
+
+    @Override
+    public void ScanFile(File file) {
         MediaScannerManager.ScanMedia(Settings.context.getApplicationContext(), file);
     }
 
@@ -259,14 +263,18 @@ public class HdrModule extends PictureModule implements I_WorkeDone
 
     I_WorkeDone aeBracketDone = new I_WorkeDone() {
         @Override
-        public void OnWorkDone(File file) {
-            MediaScannerManager.ScanMedia(Settings.context.getApplicationContext(), file);
+        public void OnWorkDone() {
             if (hdrCount == 2) {
                 stopworking();
                 baseCameraHolder.StartPreview();
             }
             else if (hdrCount < 2)
                 hdrCount++;
+        }
+
+        @Override
+        public void ScanFile(File file) {
+            MediaScannerManager.ScanMedia(Settings.context.getApplicationContext(), file);
         }
 
         @Override

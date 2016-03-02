@@ -150,7 +150,8 @@ public class MediatekSaver extends JpegSaver {
         dngConverter.RELEASE();
         data = null;
         DeviceSwitcher().delete();
-        iWorkeDone.OnWorkDone(new File(out));
+        iWorkeDone.OnWorkDone();
+        iWorkeDone.ScanFile(new File(out));
     }
 
     public String FeeDJNI(String msg)

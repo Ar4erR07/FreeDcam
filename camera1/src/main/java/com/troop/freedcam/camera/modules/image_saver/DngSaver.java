@@ -153,8 +153,9 @@ public class DngSaver extends JpegSaver
             dngConverter.setExifData(0, 0, 0, fnum, focal, "0", cameraHolder.Orientation + "", 0);
 
         dngConverter.WriteDNG(DeviceUtils.DEVICE());
-        dngConverter.RELEASE();
-        iWorkeDone.OnWorkDone(file);
+        //dngConverter.RELEASE();
+        iWorkeDone.OnWorkDone();
+        iWorkeDone.ScanFile(file);
 
     }
 

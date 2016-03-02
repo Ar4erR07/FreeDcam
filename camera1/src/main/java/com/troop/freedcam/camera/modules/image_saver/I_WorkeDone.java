@@ -7,6 +7,7 @@ import java.io.File;
  */
 public interface I_WorkeDone
 {
-    void OnWorkDone(File file);
+    void OnWorkDone();
+    void ScanFile(File file);
     void OnError(String error);
 }
