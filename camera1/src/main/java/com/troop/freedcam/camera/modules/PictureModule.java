@@ -259,6 +259,7 @@ public class PictureModule extends AbstractModule implements I_WorkeDone {
                     }
                 }
             });
+            burstDone.OnWorkDone();
 
         }
     };

@@ -154,19 +154,19 @@ public class RawToDng
             SetLensData(nativeHandler, fileBytes, hasLensData);
     }
 
-    private void SetBayerInfo(float[] colorMatrix1,
+    public void SetBayerInfo(float[] colorMatrix1,
                              float[] colorMatrix2,
                              float[] neutralColor,
-                              float[] fowardMatrix1,
-                              float[] fowardMatrix2,
-                              float[] reductionMatrix1,
-                              float[] reductionMatrix2,
-                              float[] noise,
+                             float[] fowardMatrix1,
+                             float[] fowardMatrix2,
+                             float[] reductionMatrix1,
+                             float[] reductionMatrix2,
+                             float[] noise,
                              int blacklevel,
                              String bayerformat,
                              int rowSize,
                              String devicename,
-                             int tight,int width,int height)
+                             int tight, int width, int height)
     {
         if (nativeHandler != null)
             SetBayerInfo(nativeHandler, colorMatrix1, colorMatrix2, neutralColor, fowardMatrix1, fowardMatrix2, reductionMatrix1, reductionMatrix2, noise, blacklevel, bayerformat, rowSize, devicename, tight, width, height);
@@ -222,6 +222,13 @@ public class RawToDng
             WriteDNG(nativeHandler);
             RELEASE();
         }
+    }
+
+    public void WriteDngWithCustomProfile()
+    {
+        SetModelAndMake(Build.MODEL, Build.MANUFACTURER);
+        WriteDNG(nativeHandler);
+        RELEASE();
     }
 
     public void WriteDngWithProfile(DngSupportedDevices.DngProfile profile)

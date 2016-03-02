@@ -48,7 +48,7 @@ public class MetaDataExtractor {
                     Process process;
                     try {
                         process = new ProcessBuilder()
-                                .command("su", "-c", "logcat -d -s AEC_PORT | grep -E iso")
+                                .command("su", "-c", "logcat -d -s AEC_PORT | grep -E aec_port_proc_get_aec_data")
                                 .redirectErrorStream(true)
                                 .start();
 

@@ -11,6 +11,7 @@ import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
+import com.troop.androiddng.DngSupportedDevices;
 import com.troop.androiddng.RawToDng;
 import com.troop.freedcam.camera.BaseCameraHolder;
 import com.troop.freedcam.camera.parameters.CamParametersHandler;
@@ -32,6 +33,8 @@ public class DngSaver extends JpegSaver
     final RawToDng dngConverter;
    // boolean isDebug = true;
     MetaDataExtractor meta;
+    int iso1;
+    float[] asShotMatrix;
 
     final String TAG = DngSaver.class.getSimpleName();
     public DngSaver(BaseCameraHolder cameraHolder, I_WorkeDone i_workeDone, Handler handler, boolean externalSD)
@@ -59,6 +62,7 @@ public class DngSaver extends JpegSaver
             MetaDataExtractor.StatiClear();
            // MetaDataExtractor.StatiCEXCute();
             meta.extractMeta();
+            meta.extractgain();
         }
 
         handler.post(new Runnable() {
@@ -116,6 +120,12 @@ public class DngSaver extends JpegSaver
         {
 
         }
+        // extract for burst
+        if (cameraHolder.ParameterHandler.Burst.GetValue() > 1 && (DeviceUtils.IS_DEVICE_ONEOF(DeviceUtils.ZTE_DEVICES) ||DeviceUtils.IS_DEVICE_ONEOF(DeviceUtils.MI3_4)))
+        {
+            meta.extractMeta();
+            meta.extractgain();
+        }
 
         Log.d(TAG, "Is raw stream");
         int w = 0;
@@ -145,7 +155,7 @@ public class DngSaver extends JpegSaver
             fnum = 2.0f;
             focal = 28.342f;
         }
-        else if (DeviceUtils.IS_DEVICE_ONEOF(DeviceUtils.LG_G2_3)){
+        else if (DeviceUtils.IS_DEVICE_ONEOF(DeviceUtils.MI3_4)){
             fnum = 2.2f;
             focal = ((CamParametersHandler)cameraHolder.ParameterHandler).GetFocal();
         }
@@ -154,11 +164,23 @@ public class DngSaver extends JpegSaver
             focal = ((CamParametersHandler)cameraHolder.ParameterHandler).GetFocal();
         }
         if(meta != null){
-            dngConverter.setExifData(meta.getIso(), meta.getExp(), meta.getFlash(), fnum, focal, meta.getDescription(), cameraHolder.Orientation + "", 0);}
-        else
-            dngConverter.setExifData(0, 0, 0, fnum, focal, "0", cameraHolder.Orientation + "", 0);
+            DngSupportedDevices.DngProfile profile = new DngSupportedDevices().getProfile(DeviceUtils.DEVICE(), (int)dngConverter.GetRawSize());
+            //Guaranteed to get metadata
+            iso1 = meta.getIso();
+            while (iso1 == 0)
+                iso1 = meta.getIso();
+            dngConverter.setExifData(iso1, meta.getExp(), meta.getFlash(), fnum, focal, meta.getDescription(), cameraHolder.Orientation + "", 0);
+            asShotMatrix = meta.getAsShotMatrix();
+            while (asShotMatrix == null)
+                asShotMatrix = meta.getAsShotMatrix();
+            dngConverter.SetBayerInfo(profile.matrix1, profile.matrix2, asShotMatrix, profile.fowardmatrix1, profile.fowardmatrix2, profile.reductionmatrix1, profile.reductionmatrix2, profile.noiseprofile,profile.blacklevel, profile.BayerPattern, profile.rowsize, Build.MODEL,profile.rawType,profile.widht,profile.height);
 
-        dngConverter.WriteDNG(DeviceUtils.DEVICE());
+            dngConverter.WriteDngWithCustomProfile();
+        }
+        else {
+            dngConverter.setExifData(0, 0, 0, fnum, focal, "0", cameraHolder.Orientation + "", 0);
+            dngConverter.WriteDNG(DeviceUtils.DEVICE());
+        }
         //dngConverter.RELEASE();
         iWorkeDone.ScanFile(file);
 
