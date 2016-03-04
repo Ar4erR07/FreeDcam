@@ -64,15 +64,17 @@ public class MetaDataExtractor {
                             metadata.add(line);
                         }
 
+                        try {
+                            String[] split0 = metadata.get(metadata.size() - 1).split(",");
+                            String[] split1 = split0[0].split(":");
+                            String[] split2 = split1[3].split(" ");
 
-                        String[] split0 = metadata.get(metadata.size()-1).split(",");
-                        String[] split1 = split0[0].split(":");
-                        String[] split2 = split1[3].split(" ");
 
-
-                        exp = Float.parseFloat(split2[3]);
-                        iso = Integer.parseInt(split2[5]);
-                        Description = metadata.get(metadata.size() - 1);
+                            exp = Float.parseFloat(split2[3]);
+                            iso = Integer.parseInt(split2[5]);
+                            Description = metadata.get(metadata.size() - 1);
+                        }
+                        catch (StringIndexOutOfBoundsException ex) {}
 
 
                         process.destroy();
