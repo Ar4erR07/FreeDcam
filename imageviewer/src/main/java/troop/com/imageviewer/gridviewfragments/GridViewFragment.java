@@ -485,8 +485,7 @@ public class GridViewFragment extends BaseGridViewFragment
         return null;
     }
 
-    public void loadBitmap(File file, GridImageView imageView)
-    {
+    public void loadBitmap(File file, GridImageView imageView) {
         if (cancelPotentialWork(file, imageView))
         {
             final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
