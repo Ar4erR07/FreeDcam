@@ -455,6 +455,7 @@ public class GridViewFragment extends BaseGridViewFragment
             GridImageView imageView;
             if (convertView == null) { // if it's not recycled, initialize some attributes
                 imageView = new GridImageView(mContext);
+                loadBitmap(files[position].getFile(), imageView); // Load image into ImageView
                 if (position == 0 && !pos0ret)
                 {
                     imageView.SetEventListner(files[position]);
@@ -469,7 +470,6 @@ public class GridViewFragment extends BaseGridViewFragment
                 imageView.SetEventListner(files[position]);
             Log.d(TAG, "pos:" + position + " imageviewState: " + files[position].GetCurrentViewState() + " /GridState:" + currentViewState + " filename:" + files[position].getFile().getName() +
                     " ischecked:" + files[position].IsSelected());
-            loadBitmap(files[position].getFile(), imageView); // Load image into ImageView
             return imageView;
         }
     }
@@ -513,7 +513,7 @@ public class GridViewFragment extends BaseGridViewFragment
                 imageView.SetFolderName(f);
             }
 
-            task.execute(file);
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, file);
         }
     }
 
