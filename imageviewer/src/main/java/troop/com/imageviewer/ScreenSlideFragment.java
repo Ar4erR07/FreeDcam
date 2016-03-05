@@ -528,9 +528,9 @@ public class ScreenSlideFragment extends Fragment implements I_swipe, ViewPager.
             else if (file.getAbsolutePath().endsWith(".dng") || file.getAbsolutePath().endsWith(".raw")) {
                 try {
                     response = RawUtils.UnPackRAW(file.getAbsolutePath());
-                    if (response != null) {
-                        response.setHasAlpha(true);
-                    }
+                    //if (response != null) {
+                    //    response.setHasAlpha(false);
+                    //}
 
                 } catch (IllegalArgumentException ex) {
                     response = null;
