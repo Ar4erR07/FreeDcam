@@ -1,13 +1,9 @@
 package troop.com.imageviewer;
 
-
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -19,7 +15,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 
-import com.defcomk.jni.libraw.RawUtils;
 import com.ortiz.touch.TouchImageView;
 
 import java.io.File;
@@ -117,61 +112,22 @@ public class ImageFragment extends Fragment  {
 
     private void loadImage()
     {
-        final Bitmap response = getBitmap();
+
+        final Bitmap response = activity.getBitmap(file);
         imageView.post(new Runnable() {
             @Override
-            public void run() {
+            public void run()
+            {
                 fadein();
                 imageView.setImageBitmap(response);
-                //activity.myHistogram.setBitmap(response, false);
+                if (response == null)
+                    workDone.onWorkDone(false, file);
+                else
+                    workDone.onWorkDone(true, file);
             }
         });
     }
 
-    private Bitmap getBitmap()
-    {
-        Bitmap response;
-
-        if (file.getAbsolutePath().endsWith(".jpg") || file.getAbsolutePath().endsWith(".jps"))
-        {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = 2;
-            response = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-        }
-        else if (file.getAbsolutePath().endsWith(".mp4"))
-            response = ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.FULL_SCREEN_KIND);
-        else if (file.getAbsolutePath().endsWith(".dng")|| file.getAbsolutePath().endsWith(".raw"))
-        {
-            try {
-
-
-                response = RawUtils.UnPackRAW(file.getAbsolutePath());
-                if(response != null) {
-                    response.setHasAlpha(true);
-                }
-
-            }
-            catch (IllegalArgumentException ex)
-            {
-                response = null;
-                activity.filename.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        activity.filename.setText(R.string.failed_to_load + file.getName());
-
-                    }
-                });
-            }
-        }
-        else
-            response = null;
-        if (response == null)
-            workDone.onWorkDone(false, file);
-        else
-            workDone.onWorkDone(true, file);
-
-        return response;
-    }
 
     private void fadeout()
     {
@@ -227,7 +183,5 @@ public class ImageFragment extends Fragment  {
 
         }
     };
-
-
 
 }

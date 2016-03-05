@@ -65,7 +65,7 @@ public class HardwareKeyHandler
             //if (keyCode == KeyEvent.KEYCODE_FOCUS)
 
         }
-        if (keyCode == KeyEvent.KEYCODE_BACK)
+        if (keyCode == KeyEvent.KEYCODE_BACK && activity.currentFargment.equals("camera"))
             activity.finish();
         return true;
     }

@@ -66,6 +66,7 @@ public class MainActivity extends FragmentActivity implements I_orientation, I_e
     ScreenSlideFragment imageViewerFragment;
     private boolean debuglogging = false;
     FileLogger logger;
+    public String currentFargment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -227,6 +228,7 @@ public class MainActivity extends FragmentActivity implements I_orientation, I_e
             transaction.add(R.id.cameraFragmentHolder, cameraFragment, "CameraFragment");
             transaction.commitAllowingStateLoss();
             Log.d(TAG, "loaded cameraWrapper");
+            currentFargment = "camera";
 
     }
 
@@ -469,6 +471,7 @@ public class MainActivity extends FragmentActivity implements I_orientation, I_e
             transaction.setCustomAnimations(R.anim.right_to_left_enter, R.anim.right_to_left_exit);
             transaction.replace(R.id.themeFragmentholder, imageViewerFragment);
             transaction.commitAllowingStateLoss();
+            currentFargment = "viewer";
         }
         catch (Exception ex)
         {
@@ -480,6 +483,7 @@ public class MainActivity extends FragmentActivity implements I_orientation, I_e
     public void loadCameraUiFragment()
     {
         themeHandler.GetThemeFragment(true, cameraFragment.GetCameraUiWrapper());
+        currentFargment = "camera";
     }
 
     @Override

@@ -1,6 +1,7 @@
 package troop.com.imageviewer;
 
 
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,14 +9,19 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.util.LruCache;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -102,17 +108,24 @@ public class ScreenSlideFragment extends Fragment implements I_swipe, ViewPager.
     SharedPreferences sharedPref;
     final String KEY_BARSVISIBLE = "key_barsvisible";
     private Animation animBottomToTopShow, animBottomToTopHide, animTopToBottomShow, animTopToBottomHide;
+    private LruCache memoryCache;
+    private boolean getBitmapRunning=true;
+    private boolean activitypaused;
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         return inflater.inflate(R.layout.screenslide_fragment, container, false);
 
     }
 
+
+
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState)
     {
+
         super.onViewCreated(view, savedInstanceState);
         touchHandler = new SwipeMenuListner(this);
         // Instantiate a ViewPager and a PagerAdapter.
@@ -128,8 +141,11 @@ public class ScreenSlideFragment extends Fragment implements I_swipe, ViewPager.
         closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (activity != null)
+                if (activity != null) {
                     activity.loadCameraUiFragment();
+                    if (memoryCache != null)
+                        memoryCache.evictAll();
+                }
                 else
                     getActivity().finish();
             }
@@ -188,13 +204,46 @@ public class ScreenSlideFragment extends Fragment implements I_swipe, ViewPager.
             hideBars();
         updatefileinfo();
         mPager.addOnPageChangeListener(this);
+
+
+        final int memClass = ((ActivityManager) getContext().getSystemService(
+                Context.ACTIVITY_SERVICE)).getMemoryClass();
+        final int cacheSize = 1024 * 1024 * memClass/2;
+        memoryCache = new LruCache<String, Bitmap>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
+                return bitmap.getByteCount();
+            }
+        };
+        this.getView().setFocusableInTouchMode(true);
+        this.getView().requestFocus();
+        this.getView().setOnKeyListener( new View.OnKeyListener()
+        {
+            @Override
+            public boolean onKey( View v, int keyCode, KeyEvent event )
+            {
+                if( keyCode == KeyEvent.KEYCODE_BACK && activity != null && !activitypaused) {
+                    activity.loadCameraUiFragment();
+                    return true;
+                }
+                return false;
+            }
+        } );
     }
 
 
     @Override
     public void onResume()
     {
+        activitypaused = false;
         super.onResume();
+    }
+
+    @Override
+    public void onPause()
+    {
+        activitypaused = true;
+        super.onPause();
     }
 
     @Override
@@ -346,10 +395,9 @@ public class ScreenSlideFragment extends Fragment implements I_swipe, ViewPager.
 
     public void updatefileinfo()
     {
-        if (files !=null && files.length != 0) {
+        if (files !=null && files.length != 0 && barsvisible) {
             curfile = (files[mPager.getCurrentItem()].getFile());
                 filename.setText(curfile.getName());
-                myHistogram.setBitmap(null, false);
                 myHistogram.setVisibility(View.GONE);
                 if (curfile.getAbsolutePath().endsWith(".jpg") || curfile.getAbsolutePath().endsWith(".jps")) {
                     processJpeg(curfile);
@@ -449,55 +497,67 @@ public class ScreenSlideFragment extends Fragment implements I_swipe, ViewPager.
         getActivity().sendBroadcast(intent);
     }
 
-    private void loadHistogram()
+    public void loadHistogram()
     {
-        Thread t = new Thread(new Runnable() {
-            public void run() {
-                myHistogram.setBitmap(getBitmap(), false);
-                /*getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        myHistogram.setVisibility(View.VISIBLE);
-                    }
-                });*/
+       new Thread(new Runnable() {
+        public void run() {
+            while (getBitmapRunning){
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        });
-        t.start();
+            myHistogram.setBitmap(getBitmap(curfile), false);
+        }
+        }).start();
     }
 
-    private Bitmap getBitmap()
+    public Bitmap getBitmap(File file)
     {
         Bitmap response;
-        if (curfile.getAbsolutePath().endsWith(".jpg") || curfile.getAbsolutePath().endsWith(".jps"))
-        {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = 2;
-            response = BitmapFactory.decodeFile(curfile.getAbsolutePath(), options);
-        }
-        else if (curfile.getAbsolutePath().endsWith(".dng")|| curfile.getAbsolutePath().endsWith(".raw"))
-        {
-            try {
-
-
-                response = RawUtils.UnPackRAW(curfile.getAbsolutePath());
-                if(response != null)
-                    response.setHasAlpha(true);
-            }
-            catch (IllegalArgumentException ex)
-            {
-                response = null;
-                filename.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        filename.setText(R.string.failed_to_load + curfile.getName() );
-
+        getBitmapRunning = true;
+        response = getBitmapFromMemCache(file.getName());
+        if (response == null) {
+            if (file.getAbsolutePath().endsWith(".jpg") || file.getAbsolutePath().endsWith(".jps")) {
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inSampleSize = 2;
+                response = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+            } else if (file.getAbsolutePath().endsWith(".mp4"))
+                response = ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.FULL_SCREEN_KIND);
+            else if (file.getAbsolutePath().endsWith(".dng") || file.getAbsolutePath().endsWith(".raw")) {
+                try {
+                    response = RawUtils.UnPackRAW(file.getAbsolutePath());
+                    if (response != null) {
+                        response.setHasAlpha(true);
                     }
-                });
-            }
+
+                } catch (IllegalArgumentException ex) {
+                    response = null;
+                    filename.setText(R.string.failed_to_load + file.getName());
+                }
+
+            } else
+                response = null;
+            if (response != null)
+                addBitmapToMemoryCache(file.getName(),response);
         }
-        else
-            response = null;
+        getBitmapRunning = false;
         return response;
+    }
+
+
+    public void addBitmapToMemoryCache(String key, Bitmap bitmap) {
+        if (getBitmapFromMemCache(key) == null && memoryCache != null) {
+            memoryCache.put(key, bitmap);
+        }
+    }
+
+    public Bitmap getBitmapFromMemCache(String key) {
+        if (memoryCache == null)
+            return null;
+        else
+            return (Bitmap) memoryCache.get(key);
     }
 
     private void processJpeg(final File file)
@@ -558,6 +618,7 @@ public class ScreenSlideFragment extends Fragment implements I_swipe, ViewPager.
         bottombar.setVisibility(View.VISIBLE);
         barsvisible = true;
         sharedPref.edit().putBoolean(KEY_BARSVISIBLE, barsvisible).commit();
+        updatefileinfo();
     }
 
     private void hideBars()

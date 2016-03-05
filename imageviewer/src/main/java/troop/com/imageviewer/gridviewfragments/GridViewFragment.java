@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -83,120 +84,101 @@ public class GridViewFragment extends BaseGridViewFragment
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
-        super.onCreateView(inflater, container, savedInstanceState);
-        mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
-        deleteButton = (Button)view.findViewById(R.id.button_deltePics);
-        deleteButton.setVisibility(View.GONE);
-        deleteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                switch (currentViewState) {
-                    case normal:
-                        setViewMode(ViewStates.selection);
-                        break;
-                    case selection:
-                        //check if files are selceted
-                        boolean hasfilesSelected = false;
-                        for (FileHolder f : files) {
-                            if (f.IsSelected()) {
-                                hasfilesSelected = true;
-                                break;
-                            }
-
-                        }
-                        //if no files selected skip dialog
-                        if (!hasfilesSelected)
+        {
+            super.onCreateView(inflater, container, savedInstanceState);
+            mImageThumbSize = getResources().getDimensionPixelSize(R.dimen.image_thumbnail_size);
+            deleteButton = (Button)view.findViewById(R.id.button_deltePics);
+            deleteButton.setVisibility(View.GONE);
+            deleteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    switch (currentViewState) {
+                        case normal:
+                            setViewMode(ViewStates.selection);
                             break;
-                        //else show dialog
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                        builder.setMessage(R.string.delete_files).setPositiveButton(R.string.yes, dialogClickListener)
-                                .setNegativeButton(R.string.no, dialogClickListener).show();
-                        setViewMode(ViewStates.normal);
-                        break;
-                }
-            }
-        });
+                        case selection:
+                            //check if files are selceted
+                            boolean hasfilesSelected = false;
+                            for (FileHolder f : files) {
+                                if (f.IsSelected()) {
+                                    hasfilesSelected = true;
+                                    break;
+                                }
 
-        gobackButton = (Button)view.findViewById(R.id.button_goback);
-        gobackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view)
-            {
-                if (currentViewState == ViewStates.normal) {
-                    if (files != null && files.length > 0) {
-                        String topPath = files[0].getFile().getParentFile().getParentFile().getAbsolutePath() + "/";
-                        String inter = StringUtils.GetInternalSDCARD() + StringUtils.DCIMFolder;
-                        String external = StringUtils.GetExternalSDCARD() + StringUtils.DCIMFolder;
-
-                        if ((inter.contains(topPath) && topPath.length() < inter.length() || topPath.equals(inter))
-                                || (external.contains(topPath) && topPath.length() < external.length() || topPath.equals(external)))
-                        {
-                            if(topPath.equals(inter) || topPath.equals(external)) {
-                                savedInstanceFilePath = null;
-                                loadDefaultFolders();
                             }
-                            else
-                                getActivity().finish();
-                        }
-                        else {
-                            loadFiles(files[0].getFile());
-                            savedInstanceFilePath = files[0].getFile().getAbsolutePath();
-                        }
+                            //if no files selected skip dialog
+                            if (!hasfilesSelected)
+                                break;
+                            //else show dialog
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                            builder.setMessage(R.string.delete_files).setPositiveButton(R.string.yes, dialogClickListener)
+                                    .setNegativeButton(R.string.no, dialogClickListener).show();
+                            setViewMode(ViewStates.normal);
+                            break;
                     }
-                    else
-                        loadDefaultFolders();
                 }
-                else if (currentViewState == ViewStates.selection)
+            });
+
+            gobackButton = (Button)view.findViewById(R.id.button_goback);
+            gobackButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    backButtonHandler();
+                }
+            });
+
+            filetypeButton = (Button)view.findViewById(R.id.button_filetype);
+            filetypeButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showPopup(v);
+                }
+            });
+
+            rawToDngButton = (Button)view.findViewById(R.id.button_rawToDng);
+            rawToDngButton.setVisibility(View.GONE);
+            rawToDngButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v)
                 {
-                    for (int i = 0; i< files.length; i++)
+                    ArrayList<String> ar = new ArrayList<String>();
+                    for (FileHolder f : files)
                     {
-                        FileHolder f = files[i];
+                        if (f.IsSelected() && f.getFile().getAbsolutePath().endsWith("raw"))
+                        {
+                            ar.add(f.getFile().getAbsolutePath());
+                        }
+
+                    }
+                    for (FileHolder f : files)
+                    {
                         f.SetSelected(false);
                     }
                     setViewMode(ViewStates.normal);
+                    final Intent i = new Intent(getActivity(), DngConvertingActivity.class);
+                    String[]t = new String[ar.size()];
+                    ar.toArray(t);
+                    i.putExtra(DngConvertingFragment.EXTRA_FILESTOCONVERT, t);
+                    startActivity(i);
                 }
-            }
-        });
+            });
 
-        filetypeButton = (Button)view.findViewById(R.id.button_filetype);
-        filetypeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showPopup(v);
-            }
-        });
+            view.setFocusableInTouchMode(true);
+            view.requestFocus();
+            view.setOnKeyListener(new View.OnKeyListener() {
+                @Override
+                public boolean onKey(View v, int keyCode, KeyEvent event) {
 
-        rawToDngButton = (Button)view.findViewById(R.id.button_rawToDng);
-        rawToDngButton.setVisibility(View.GONE);
-        rawToDngButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                ArrayList<String> ar = new ArrayList<String>();
-                for (FileHolder f : files)
-                {
-                    if (f.IsSelected() && f.getFile().getAbsolutePath().endsWith("raw"))
-                    {
-                        ar.add(f.getFile().getAbsolutePath());
+                    if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == event.ACTION_UP) {
+                        backButtonHandler();
+                        return true;
                     }
-
+                    return false;
                 }
-                for (FileHolder f : files)
-                {
-                    f.SetSelected(false);
-                }
-                setViewMode(ViewStates.normal);
-                final Intent i = new Intent(getActivity(), DngConvertingActivity.class);
-                String[]t = new String[ar.size()];
-                ar.toArray(t);
-                i.putExtra(DngConvertingFragment.EXTRA_FILESTOCONVERT, t);
-                startActivity(i);
-            }
-        });
+            });
 
-        return view;
-    }
+            return view;
+        }
 
     @Override
     protected void inflate(LayoutInflater inflater, ViewGroup container) {
@@ -267,6 +249,35 @@ public class GridViewFragment extends BaseGridViewFragment
         }
         else
             load();
+    }
+
+    private void backButtonHandler() {
+            if (currentViewState == ViewStates.normal) {
+                if (files != null && files.length > 0) {
+                    String topPath = files[0].getFile().getParentFile().getParentFile().getAbsolutePath() + "/";
+                    String inter = StringUtils.GetInternalSDCARD() + StringUtils.DCIMFolder;
+                    String external = StringUtils.GetExternalSDCARD() + StringUtils.DCIMFolder;
+
+                    if ((inter.contains(topPath) && topPath.length() < inter.length() || topPath.equals(inter))
+                            || (external.contains(topPath) && topPath.length() < external.length() || topPath.equals(external))) {
+                        if (topPath.equals(inter) || topPath.equals(external)) {
+                            savedInstanceFilePath = null;
+                            loadDefaultFolders();
+                        } else
+                            getActivity().finish();
+                    } else {
+                        loadFiles(files[0].getFile());
+                        savedInstanceFilePath = files[0].getFile().getAbsolutePath();
+                    }
+                } else
+                    loadDefaultFolders();
+            } else if (currentViewState == ViewStates.selection) {
+                for (int i = 0; i < files.length; i++) {
+                    FileHolder f = files[i];
+                    f.SetSelected(false);
+                }
+                setViewMode(ViewStates.normal);
+            }
     }
 
     private void load()
