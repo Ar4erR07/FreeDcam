@@ -96,6 +96,7 @@ public class CameraUiFragment extends AbstractFragment implements I_ParametersLo
 
     final String KEY_MANUALMENUOPEN = "key_manualmenuopen";
     final String KEY_SETTINGSOPEN = "key_settingsopen";
+    final String KEY_FLASHSTATE = "key_flashstate";
     SharedPreferences sharedPref;
 
     HorizontLineFragment horizontLineFragment;
@@ -302,7 +303,12 @@ public class CameraUiFragment extends AbstractFragment implements I_ParametersLo
     @Override
     public void onResume() {
         super.onResume();
-
+        if (wrapper != null && wrapper.camParametersHandler != null) {
+            wrapper.StartPreview();
+            String flashmode = sharedPref.getString(KEY_FLASHSTATE, "off");
+            if (!flashmode.equals(wrapper.camParametersHandler.FlashMode.GetValue()))
+                wrapper.camParametersHandler.FlashMode.SetValue(flashmode,true);
+        }
 
         infoOverlayHandler.StartUpdating();
     }
@@ -310,6 +316,11 @@ public class CameraUiFragment extends AbstractFragment implements I_ParametersLo
     @Override
     public void onPause()
     {
+        if (wrapper != null && wrapper.camParametersHandler != null){
+            sharedPref.edit().putString(KEY_FLASHSTATE, wrapper.camParametersHandler.FlashMode.GetValue()).commit();
+            wrapper.camParametersHandler.FlashMode.SetValue("off",true);
+            wrapper.StopPreview();
+        }
         infoOverlayHandler.StopUpdating();
         sharedPref.edit().putBoolean(KEY_MANUALMENUOPEN,manualsettingsIsOpen).commit();
         sharedPref.edit().putBoolean(KEY_SETTINGSOPEN,settingsOpen).commit();
