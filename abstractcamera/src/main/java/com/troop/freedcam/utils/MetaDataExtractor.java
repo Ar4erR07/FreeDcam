@@ -74,7 +74,7 @@ public class MetaDataExtractor {
                             iso = Integer.parseInt(split2[5]);
                             Description = metadata.get(metadata.size() - 1);
                         }
-                        catch (StringIndexOutOfBoundsException ex) {}
+                        catch (ArrayIndexOutOfBoundsException ex) {}
 
 
                         process.destroy();
