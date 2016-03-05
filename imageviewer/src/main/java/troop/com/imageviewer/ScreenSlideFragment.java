@@ -222,7 +222,7 @@ public class ScreenSlideFragment extends Fragment implements I_swipe, ViewPager.
             @Override
             public boolean onKey( View v, int keyCode, KeyEvent event )
             {
-                if( keyCode == KeyEvent.KEYCODE_BACK && activity != null && !activitypaused) {
+                if( keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == event.ACTION_UP && activity != null && !activitypaused) {
                     activity.loadCameraUiFragment();
                     return true;
                 }
