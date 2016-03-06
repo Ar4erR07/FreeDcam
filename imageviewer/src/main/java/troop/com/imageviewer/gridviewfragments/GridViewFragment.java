@@ -67,6 +67,8 @@ public class GridViewFragment extends BaseGridViewFragment
     FormatTypes formatsToShow = FormatTypes.all;
     boolean pos0ret = false;
     boolean PERMSISSIONGRANTED = false;
+    private static Bitmap noimage;
+    private static Bitmap folder;
 
 
 
@@ -193,6 +195,8 @@ public class GridViewFragment extends BaseGridViewFragment
             savedInstanceFilePath = (String) savedInstanceState.get(savedInstanceString);
 
         }
+        noimage = BitmapFactory.decodeResource(getResources(), R.drawable.noimage);
+        folder = BitmapFactory.decodeResource(getResources(), R.drawable.folder);
     }
 
     @Override
@@ -503,13 +507,13 @@ public class GridViewFragment extends BaseGridViewFragment
             if (!file.isDirectory())
             {
                 final AsyncDrawable asyncDrawable =
-                        new AsyncDrawable(getResources(), BitmapFactory.decodeResource(getResources(), R.drawable.noimage), task);
+                        new AsyncDrawable(getResources(), noimage, task);
                 imageView.setImageDrawable(asyncDrawable);
             }
             else
             {
                 final AsyncDrawable asyncDrawable =
-                        new AsyncDrawable(getResources(), BitmapFactory.decodeResource(getResources(), R.drawable.folder), task);
+                        new AsyncDrawable(getResources(), folder, task);
                 imageView.setImageDrawable(asyncDrawable);
             }
             String f = file.getName();
